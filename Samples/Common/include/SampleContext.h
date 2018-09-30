@@ -156,8 +156,14 @@ namespace OgreBites
 
 #if OGRE_PLATFORM != OGRE_PLATFORM_ANDROID
                 // restore the last sample if there was one or, if not, start initial sample
-                if (!mFirstRun) recoverLastSample();
-                else if (initialSample) runSample(initialSample);
+				if (!mFirstRun)
+				{
+					recoverLastSample();
+				}
+				else if (initialSample)
+				{
+					runSample(initialSample);
+				}
 #endif
 
                 loadStartUpSample();
