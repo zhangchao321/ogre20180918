@@ -41,6 +41,28 @@ namespace Ogre {
     const Quaternion Quaternion::IDENTITY(1,0,0,0);
 
     //-----------------------------------------------------------------------
+	/*
+	*旋转轴a(xa,ya, za),旋转角度rad，则对应的旋转矩阵可表示为：
+	* (1-cos(rad))*xa*xa+cos(rad)    (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*xa*za-sin(rad)*ya 1
+	* (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*ya*ya+cos(rad)    (1-cos(rad))*ya*za-sin(rad)*xa 1
+	* (1-cos(rad)*xa*za+sin(rad)*ya  (1-cos(rad))*ya*za+sin(rad)*xa (1-cos(rad))*za*za+cos(rad)    1
+	* 0                              0                              0                              1
+	*
+	*x、y、z和w分别为：
+	* x =xa*sin(rad/2)
+	* y =ya*sin(rad/2)
+	* z =za*sin(rad/2)
+	* w =cos(rad/2)
+	*
+	*通过三角函数的半角公式，我们可以推出由四元数表示旋转矩阵的公式为：
+	* 2*(x*x+w*w)-1 2*(x*y+z*w)   2*(x*z-y*w)   1
+	* 2*(x*y-z*w)   2*(y*y+w*w)-1 2*(y*z+x*w)   1
+	* 2*(x*z+y*w)   2*(y*z-x*w)   2*(z*z+w*w)-1 1
+	* 0             0             0             1
+	*
+	*由旋转矩阵对应的各项相等可以解方程组求出四元数的各个分量，通过计算可知该方程组有四组解，
+	*我们找出x,y,z,w这四个数平方和最大的一组解来作为我们的四元数
+	*/
     void Quaternion::FromRotationMatrix (const Matrix3& kRot)
     {
         // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
@@ -81,6 +103,25 @@ namespace Ogre {
         }
     }
     //-----------------------------------------------------------------------
+	/*
+	*旋转轴a(xa,ya, za),旋转角度rad，则对应的旋转矩阵可表示为：
+	* (1-cos(rad))*xa*xa+cos(rad)    (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*xa*za-sin(rad)*ya 1
+	* (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*ya*ya+cos(rad)    (1-cos(rad))*ya*za-sin(rad)*xa 1
+	* (1-cos(rad)*xa*za+sin(rad)*ya  (1-cos(rad))*ya*za+sin(rad)*xa (1-cos(rad))*za*za+cos(rad)    1
+	* 0                              0                              0                              1
+	*
+	*x、y、z和w分别为：
+	* x =xa*sin(rad/2)
+	* y =ya*sin(rad/2)
+	* z =za*sin(rad/2)
+	* w =cos(rad/2)
+	*
+	*通过三角函数的半角公式，我们可以推出由四元数表示旋转矩阵的公式为：
+	* 2*(x*x+w*w)-1 2*(x*y+z*w)   2*(x*z-y*w)   1
+	* 2*(x*y-z*w)   2*(y*y+w*w)-1 2*(y*z+x*w)   1
+	* 2*(x*z+y*w)   2*(y*z-x*w)   2*(z*z+w*w)-1 1
+	* 0             0             0             1
+	*/
     void Quaternion::ToRotationMatrix (Matrix3& kRot) const
     {
         Real fTx  = x+x;
@@ -107,6 +148,13 @@ namespace Ogre {
         kRot[2][2] = 1.0f-(fTxx+fTyy);
     }
     //-----------------------------------------------------------------------
+	/*
+	*旋转轴a(xa,ya, za),旋转角度rad，则x、y、z和w分别为：
+	* x =xa*sin(rad/2)
+	* y =ya*sin(rad/2)
+	* z =za*sin(rad/2)
+	* w =cos(rad/2)
+	*/
     void Quaternion::FromAngleAxis (const Radian& rfAngle,
         const Vector3& rkAxis)
     {
@@ -123,6 +171,18 @@ namespace Ogre {
         z = fSin*rkAxis.z;
     }
     //-----------------------------------------------------------------------
+	/*
+	*旋转轴a(xa,ya, za),旋转角度rad，解方程组：
+	* x =xa*sin(rad/2)
+	* y =ya*sin(rad/2)
+	* z =za*sin(rad/2)
+	* w =cos(rad/2)
+	*对应的旋转轴和旋转角度分别为：
+	*rad =2.0*Math::ACos(w)
+	*xa =x/sin(rad/2)
+	*ya =y/sin(rad/2)
+	*za =z/sin(rad/2)
+	*/
     void Quaternion::ToAngleAxis (Radian& rfAngle, Vector3& rkAxis) const
     {
         // The quaternion representing the rotation is

@@ -341,8 +341,5 @@ namespace Ogre {
     /** @} */
 
 }
-
-
-
-
+ 
 #endif 
