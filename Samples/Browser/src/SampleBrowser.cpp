@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
         if (argc >= 2 && Ogre::String(argv[1]) == "nograb")
             nograb = true;
 
-        int startUpSampleIdx = -1;
+        int startUpSampleIdx = 22;
         if (argc >= 3)
         {
             startUpSampleIdx = Ogre::StringConverter::parseInt(Ogre::String(argv[2]), -1);
