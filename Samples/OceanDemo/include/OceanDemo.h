@@ -70,8 +70,8 @@ protected:
     
     void setupGUI();
     void setupScene();
-    virtual void setupContent();
-    virtual void cleanupContent();
+    void setupContent() override;
+    void cleanupContent() override;
     
     void sliderMoved(Slider* slider);
     void buttonHit(OgreBites::Button* button);
@@ -475,6 +475,7 @@ bool Sample_Ocean::frameRenderingQueued(const FrameEvent& evt)
     }
     return SdkSample::frameRenderingQueued(evt);
 }
+
 void Sample_Ocean::buttonHit(OgreBites::Button* button)
 {
     //Only one button - change page
