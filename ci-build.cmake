@@ -4,6 +4,7 @@ set(CROSS)
 
 set(CMAKE_BUILD_TYPE Debug)
 set(BUILD_DEPS FALSE)
+set(SWIG_EXECUTABLE /usr/bin/swig3.0)
 
 set(RENDERSYSTEMS
     # tests only run with the legacy GL rendersystem as MESA is too old on buildbot
@@ -37,20 +38,28 @@ elseif("$ENV{TRAVIS_OS_NAME}" STREQUAL "osx")
 endif()
 
 if(DEFINED ENV{APPVEYOR})
-    set(CMAKE_BUILD_TYPE Release)
-    set(GENERATOR -G "Visual Studio 15")
+    if("$ENV{APPVEYOR_BUILD_WORKER_IMAGE}" STREQUAL "Visual Studio 2017")
+        set(CMAKE_BUILD_TYPE Release)
+        set(GENERATOR -G "Visual Studio 15")
+    else()
+        set(GENERATOR -G "Visual Studio 12")
+    endif()
     set(RENDERSYSTEMS
         -DOGRE_BUILD_RENDERSYSTEM_D3D9=TRUE
         -DOGRE_BUILD_RENDERSYSTEM_GL=TRUE
         -DOGRE_BUILD_RENDERSYSTEM_GL3PLUS=TRUE)
-        
+
     set(OTHER
         "-DCMAKE_CXX_FLAGS=-WX -EHsc"
         -DCMAKE_GENERATOR_PLATFORM=x64
         -DOGRE_BUILD_DEPENDENCIES=TRUE
+        -DOGRE_BUILD_COMPONENT_CSHARP=FALSE
+        "-DPYTHON_EXECUTABLE=C:\\Python37-x64\\python.exe"
+        "-DPYTHON_LIBRARY=C:\\Python37-x64\\libs\\python37.lib"
         -DOGRE_DEPENDENCIES_DIR=${CMAKE_CURRENT_SOURCE_DIR}/ogredeps)
 
     set(BUILD_DEPS TRUE)
+    set(SWIG_EXECUTABLE "C:\\ProgramData\\chocolatey\\bin\\swig.exe")
 endif()
 
 if(DEFINED ENV{ANDROID})
@@ -87,7 +96,7 @@ execute_process(COMMAND ${CMAKE_COMMAND}
     -DOGRE_BUILD_TESTS=ON
     -DOGRE_RESOURCEMANAGER_STRICT=2
     -DOGRE_BUILD_DEPENDENCIES=${BUILD_DEPS}
-    -DSWIG_EXECUTABLE=/usr/bin/swig3.0
+    -DSWIG_EXECUTABLE=${SWIG_EXECUTABLE}
     ${RENDERSYSTEMS}
     ${OTHER}
     ${GENERATOR}

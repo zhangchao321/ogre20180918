@@ -114,19 +114,13 @@ void CompositorChain::createOriginalScene()
     if (!scene)
     {
         scene = CompositorManager::getSingleton().create(compName, ResourceGroupManager::INTERNAL_RESOURCE_GROUP_NAME);
-        CompositionTechnique *t = scene->createTechnique();
-        CompositionTargetPass *tp = t->getOutputTargetPass();
-        {
-            CompositionPass *pass = tp->createPass();
-            pass->setType(CompositionPass::PT_CLEAR);
-        }
-        {
-            CompositionPass *pass = tp->createPass();
-            pass->setType(CompositionPass::PT_RENDERSCENE);
-            /// Render everything, including skies
-            pass->setFirstRenderQueue(RENDER_QUEUE_BACKGROUND);
-            pass->setLastRenderQueue(RENDER_QUEUE_SKIES_LATE);
-        }
+        CompositionTargetPass *tp = scene->createTechnique()->getOutputTargetPass();
+        tp->createPass(CompositionPass::PT_CLEAR);
+
+        /// Render everything, including skies
+        CompositionPass *pass = tp->createPass(CompositionPass::PT_RENDERSCENE);
+        pass->setFirstRenderQueue(RENDER_QUEUE_BACKGROUND);
+        pass->setLastRenderQueue(RENDER_QUEUE_SKIES_LATE);
 
         /// Create base "original scene" compositor
         scene = static_pointer_cast<Compositor>(CompositorManager::getSingleton().load(compName,
@@ -554,10 +548,13 @@ void CompositorChain::_notifyViewport(Viewport* vp)
         if (vp != NULL) 
             vp->addListener(this);
         
-        if (vp->getTarget() != mViewport->getTarget())
+        if (!vp || !mViewport || vp->getTarget() != mViewport->getTarget())
         {
-            mViewport->getTarget()->removeListener(this);
-            vp->getTarget()->addListener(this);
+            if(mViewport)
+                mViewport->getTarget()->removeListener(this);
+
+            if(vp)
+                vp->getTarget()->addListener(this);
         }
         mOurListener.notifyViewport(vp);
         mViewport = vp;

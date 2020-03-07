@@ -1,13 +1,16 @@
 platform: x64
 configuration: Release
-image: Visual Studio 2017
-
+image:
+ - Visual Studio 2017
+ - Visual Studio 2013
+install:
+ - cmd: choco install swig -y & exit 0
 build_script:
  - cmake -P ci-build.cmake
  - cmake --build build --config Release --target INSTALL
 test_script:
  - set PATH=%PATH%;build\gtest\lib
- - build\bin\release\Test_Ogre.exe --gtest_filter=-MeshWithoutIndexDataTests*
+ - IF "%APPVEYOR_BUILD_WORKER_IMAGE%" == "Visual Studio 2017" build\bin\release\Test_Ogre.exe --gtest_filter=-MeshWithoutIndexDataTests*
 cache:
 - ogredeps -> CMake/Dependencies.cmake
 branches:
@@ -16,7 +19,7 @@ branches:
     - stable
 artifacts:
   - path: build/sdk
-    name: ogre-sdk-master-vc15-x64
+    name: ogre-sdk-1.11.6-vc15-x64
 deploy:
 - provider: BinTray
   username: paroj
@@ -27,6 +30,7 @@ deploy:
   package: ogre-sdk-vc15-x64
   publish: true
   override: true
-  version: master
+  version: 1.11.6
   on:
-    branch: master
+    branch: stable
+    APPVEYOR_BUILD_WORKER_IMAGE: "Visual Studio 2017"

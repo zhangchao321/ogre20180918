@@ -41,28 +41,6 @@ namespace Ogre {
     const Quaternion Quaternion::IDENTITY(1,0,0,0);
 
     //-----------------------------------------------------------------------
-	/*
-	*旋转轴a(xa,ya, za),旋转角度rad，则对应的旋转矩阵可表示为：
-	* (1-cos(rad))*xa*xa+cos(rad)    (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*xa*za-sin(rad)*ya 1
-	* (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*ya*ya+cos(rad)    (1-cos(rad))*ya*za-sin(rad)*xa 1
-	* (1-cos(rad)*xa*za+sin(rad)*ya  (1-cos(rad))*ya*za+sin(rad)*xa (1-cos(rad))*za*za+cos(rad)    1
-	* 0                              0                              0                              1
-	*
-	*x、y、z和w分别为：
-	* x =xa*sin(rad/2)
-	* y =ya*sin(rad/2)
-	* z =za*sin(rad/2)
-	* w =cos(rad/2)
-	*
-	*通过三角函数的半角公式，我们可以推出由四元数表示旋转矩阵的公式为：
-	* 2*(x*x+w*w)-1 2*(x*y+z*w)   2*(x*z-y*w)   1
-	* 2*(x*y-z*w)   2*(y*y+w*w)-1 2*(y*z+x*w)   1
-	* 2*(x*z+y*w)   2*(y*z-x*w)   2*(z*z+w*w)-1 1
-	* 0             0             0             1
-	*
-	*由旋转矩阵对应的各项相等可以解方程组求出四元数的各个分量，通过计算可知该方程组有四组解，
-	*我们找出x,y,z,w这四个数平方和最大的一组解来作为我们的四元数
-	*/
     void Quaternion::FromRotationMatrix (const Matrix3& kRot)
     {
         // Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
@@ -103,25 +81,6 @@ namespace Ogre {
         }
     }
     //-----------------------------------------------------------------------
-	/*
-	*旋转轴a(xa,ya, za),旋转角度rad，则对应的旋转矩阵可表示为：
-	* (1-cos(rad))*xa*xa+cos(rad)    (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*xa*za-sin(rad)*ya 1
-	* (1-cos(rad))*xa*ya+sin(rad)*za (1-cos(rad))*ya*ya+cos(rad)    (1-cos(rad))*ya*za-sin(rad)*xa 1
-	* (1-cos(rad)*xa*za+sin(rad)*ya  (1-cos(rad))*ya*za+sin(rad)*xa (1-cos(rad))*za*za+cos(rad)    1
-	* 0                              0                              0                              1
-	*
-	*x、y、z和w分别为：
-	* x =xa*sin(rad/2)
-	* y =ya*sin(rad/2)
-	* z =za*sin(rad/2)
-	* w =cos(rad/2)
-	*
-	*通过三角函数的半角公式，我们可以推出由四元数表示旋转矩阵的公式为：
-	* 2*(x*x+w*w)-1 2*(x*y+z*w)   2*(x*z-y*w)   1
-	* 2*(x*y-z*w)   2*(y*y+w*w)-1 2*(y*z+x*w)   1
-	* 2*(x*z+y*w)   2*(y*z-x*w)   2*(z*z+w*w)-1 1
-	* 0             0             0             1
-	*/
     void Quaternion::ToRotationMatrix (Matrix3& kRot) const
     {
         Real fTx  = x+x;
@@ -148,13 +107,6 @@ namespace Ogre {
         kRot[2][2] = 1.0f-(fTxx+fTyy);
     }
     //-----------------------------------------------------------------------
-	/*
-	*旋转轴a(xa,ya, za),旋转角度rad，则x、y、z和w分别为：
-	* x =xa*sin(rad/2)
-	* y =ya*sin(rad/2)
-	* z =za*sin(rad/2)
-	* w =cos(rad/2)
-	*/
     void Quaternion::FromAngleAxis (const Radian& rfAngle,
         const Vector3& rkAxis)
     {
@@ -171,18 +123,6 @@ namespace Ogre {
         z = fSin*rkAxis.z;
     }
     //-----------------------------------------------------------------------
-	/*
-	*旋转轴a(xa,ya, za),旋转角度rad，解方程组：
-	* x =xa*sin(rad/2)
-	* y =ya*sin(rad/2)
-	* z =za*sin(rad/2)
-	* w =cos(rad/2)
-	*对应的旋转轴和旋转角度分别为：
-	*rad =2.0*Math::ACos(w)
-	*xa =x/sin(rad/2)
-	*ya =y/sin(rad/2)
-	*za =z/sin(rad/2)
-	*/
     void Quaternion::ToAngleAxis (Radian& rfAngle, Vector3& rkAxis) const
     {
         // The quaternion representing the rotation is
@@ -224,21 +164,8 @@ namespace Ogre {
     void Quaternion::FromAxes (const Vector3& xaxis, const Vector3& yaxis, const Vector3& zaxis)
     {
         Matrix3 kRot;
-
-        kRot[0][0] = xaxis.x;
-        kRot[1][0] = xaxis.y;
-        kRot[2][0] = xaxis.z;
-
-        kRot[0][1] = yaxis.x;
-        kRot[1][1] = yaxis.y;
-        kRot[2][1] = yaxis.z;
-
-        kRot[0][2] = zaxis.x;
-        kRot[1][2] = zaxis.y;
-        kRot[2][2] = zaxis.z;
-
+        kRot.FromAxes(xaxis, yaxis, zaxis);
         FromRotationMatrix(kRot);
-
     }
     //-----------------------------------------------------------------------
     void Quaternion::ToAxes (Vector3* akAxis) const
@@ -344,32 +271,6 @@ namespace Ogre {
         );
     }
     //-----------------------------------------------------------------------
-    Quaternion Quaternion::operator* (Real fScalar) const
-    {
-        return Quaternion(fScalar*w,fScalar*x,fScalar*y,fScalar*z);
-    }
-    //-----------------------------------------------------------------------
-    Quaternion operator* (Real fScalar, const Quaternion& rkQ)
-    {
-        return Quaternion(fScalar*rkQ.w,fScalar*rkQ.x,fScalar*rkQ.y,
-            fScalar*rkQ.z);
-    }
-    //-----------------------------------------------------------------------
-    Quaternion Quaternion::operator- () const
-    {
-        return Quaternion(-w,-x,-y,-z);
-    }
-    //-----------------------------------------------------------------------
-    Real Quaternion::Dot (const Quaternion& rkQ) const
-    {
-        return w*rkQ.w+x*rkQ.x+y*rkQ.y+z*rkQ.z;
-    }
-    //-----------------------------------------------------------------------
-    Real Quaternion::Norm () const
-    {
-        return Math::Sqrt(w * w + x * x + y * y + z * z);
-    }
-    //-----------------------------------------------------------------------
     Quaternion Quaternion::Inverse () const
     {
         Real fNorm = w*w+x*x+y*y+z*z;
@@ -469,14 +370,6 @@ namespace Ogre {
 
     }
     //-----------------------------------------------------------------------
-	bool Quaternion::equals(const Quaternion& rhs, const Radian& tolerance) const
-	{
-        Real d = Dot(rhs);
-        Radian angle = Math::ACos(2.0f * d*d - 1.0f);
-
-		return Math::Abs(angle.valueRadians()) <= tolerance.valueRadians();
-	}
-    //-----------------------------------------------------------------------
     Quaternion Quaternion::Slerp (Real fT, const Quaternion& rkP,
         const Quaternion& rkQ, bool shortestPath)
     {
@@ -561,14 +454,6 @@ namespace Ogre {
         Quaternion kSlerpP = Slerp(fT, rkP, rkQ, shortestPath);
         Quaternion kSlerpQ = Slerp(fT, rkA, rkB);
         return Slerp(fSlerpT, kSlerpP ,kSlerpQ);
-    }
-    //-----------------------------------------------------------------------
-    Real Quaternion::normalise(void)
-    {
-        Real len = Norm();
-        Real factor = 1.0f / len;
-        *this = *this * factor;
-        return len;
     }
     //-----------------------------------------------------------------------
 	Radian Quaternion::getRoll(bool reprojectAxis) const

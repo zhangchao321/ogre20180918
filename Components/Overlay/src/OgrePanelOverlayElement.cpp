@@ -131,12 +131,14 @@ namespace Ogre {
             return;
 
         VertexBufferBinding* bind = mRenderOp.vertexData->vertexBufferBinding;
-        bind->unsetBinding(POSITION_BINDING);
+        if (bind->isBufferBound(POSITION_BINDING))
+            bind->unsetBinding(POSITION_BINDING);
 
         // Remove all texcoord element declarations
         if(mNumTexCoordsInBuffer > 0)
         {
-            bind->unsetBinding(TEXCOORD_BINDING);
+            if (bind->isBufferBound (TEXCOORD_BINDING))
+                bind->unsetBinding(TEXCOORD_BINDING);
 
             VertexDeclaration* decl = mRenderOp.vertexData->vertexDeclaration;
             for(size_t i = mNumTexCoordsInBuffer; i > 0; --i)
@@ -251,8 +253,8 @@ namespace Ogre {
 
         HardwareVertexBufferSharedPtr vbuf =
             mRenderOp.vertexData->vertexBufferBinding->getBuffer(POSITION_BINDING);
-        float* pPos = static_cast<float*>(
-            vbuf->lock(HardwareBuffer::HBL_DISCARD) );
+        HardwareBufferLockGuard vbufLock(vbuf, HardwareBuffer::HBL_DISCARD);
+        float* pPos = static_cast<float*>(vbufLock.pData);
 
         // Use the furthest away depth value, since materials should have depth-check off
         // This initialised the depth buffer for any 3D objects in front
@@ -272,8 +274,6 @@ namespace Ogre {
         *pPos++ = right;
         *pPos++ = bottom;
         *pPos++ = zValue;
-
-        vbuf->unlock();
     }
     //---------------------------------------------------------------------
     void PanelOverlayElement::updateTextureGeometry(void)
@@ -329,8 +329,8 @@ namespace Ogre {
             {
                 HardwareVertexBufferSharedPtr vbuf =
                     mRenderOp.vertexData->vertexBufferBinding->getBuffer(TEXCOORD_BINDING);
-                float* pVBStart = static_cast<float*>(
-                    vbuf->lock(HardwareBuffer::HBL_DISCARD) );
+                HardwareBufferLockGuard vbufLock(vbuf, HardwareBuffer::HBL_DISCARD);
+                float* pVBStart = static_cast<float*>(vbufLock.pData);
 
                 size_t uvSize = VertexElement::getTypeSize(VET_FLOAT2) / sizeof(float);
                 size_t vertexSize = decl->getVertexSize(TEXCOORD_BINDING) / sizeof(float);
@@ -366,7 +366,6 @@ namespace Ogre {
                     pTex[0] = upperX;
                     pTex[1] = upperY;
                 }
-                vbuf->unlock();
             }
         }
     }

@@ -417,6 +417,9 @@ namespace Ogre {
         */
         SceneNodeList mSceneNodes;
 
+        /// additional map to speed up lookup by name
+        std::map<String, SceneNode*> mNamedNodes;
+
         /// Camera in progress
         Camera* mCameraInProgress;
         /// Current Viewport
@@ -522,7 +525,6 @@ namespace Ogre {
         uint8 mWorldGeometryRenderQueue;
         
         unsigned long mLastFrameNumber;
-        Affine3 mTempXform[256];
         bool mResetIdentityView;
         bool mResetIdentityProj;
 
@@ -625,8 +627,8 @@ namespace Ogre {
             HardwareIndexBufferSharedPtr mShadowIndexBuffer;
             size_t mShadowIndexBufferSize;
             size_t mShadowIndexBufferUsedSize;
-            GpuProgramParametersSharedPtr mInfiniteExtrusionParams;
-            GpuProgramParametersSharedPtr mFiniteExtrusionParams;
+            static GpuProgramParametersSharedPtr msInfiniteExtrusionParams;
+            static GpuProgramParametersSharedPtr msFiniteExtrusionParams;
 
             Pass* mShadowTextureCustomCasterPass;
             Pass* mShadowTextureCustomReceiverPass;
@@ -1049,7 +1051,6 @@ namespace Ogre {
         /// Whether to use camera-relative rendering
         bool mCameraRelativeRendering;
         Affine3 mCachedViewMatrix;
-        Vector3 mCameraRelativePosition;
 
         /// Last light sets
         uint32 mLastLightHash;
@@ -1369,18 +1370,17 @@ namespace Ogre {
         SceneNode* getRootSceneNode(void);
 
         /** Retrieves a named SceneNode from the scene graph.
-        @remarks
-            If you chose to name a SceneNode as you created it, or if you
-            happened to make a note of the generated name, you can look it
+
+            If you chose to name a SceneNode as you created it, you can look it
             up wherever it is in the scene graph using this method.
-            @note Throws an exception if the named instance does not exist
+            @param name
+            @param throwExceptionIfNotFound Throws an exception if the named instance does not exist
         */
-        SceneNode* getSceneNode(const String& name) const;
+        SceneNode* getSceneNode(const String& name, bool throwExceptionIfNotFound = true) const;
 
         /** Returns whether a scene node with the given name exists.
         */
-        bool hasSceneNode(const String& name) const;
-
+        bool hasSceneNode(const String& name) const { return getSceneNode(name, false) != NULL; }
 
         /** Create an Entity (instance of a discrete mesh).
             @param
@@ -2162,7 +2162,7 @@ namespace Ogre {
         */
         void setFog(
             FogMode mode = FOG_NONE, const ColourValue& colour = ColourValue::White,
-            Real expDensity = 0.001, Real linearStart = 0.0, Real linearEnd = 1.0);
+            Real expDensity = 0.001f, Real linearStart = 0.0f, Real linearEnd = 1.0f);
 
         /** Returns the fog mode for the scene.
         */
@@ -2751,8 +2751,11 @@ namespace Ogre {
         void setShadowTextureConfig(size_t shadowIndex,
             const ShadowTextureConfig& config);
 
-        /** Get an iterator over the current shadow texture settings. */
-        ConstShadowTextureConfigIterator getShadowTextureConfigIterator() const;
+        /** Get the current shadow texture settings. */
+        const ShadowTextureConfigList& getShadowTextureConfigList() const { return mShadowTextureConfigList; }
+
+        /// @deprecated use getShadowTextureConfigList
+        OGRE_DEPRECATED ConstShadowTextureConfigIterator getShadowTextureConfigIterator() const;
 
         /** Set the pixel format of the textures used for texture-based shadows.
         @remarks
@@ -2782,8 +2785,8 @@ namespace Ogre {
             make this more flexible, but be aware of the texture memory it will use.
         */
         void setShadowTextureCount(size_t count);
-        /// Get the number of the textures allocated for texture based shadows
-        size_t getShadowTextureCount(void) const {return mShadowTextureConfigList.size(); }
+        /// @deprecated use getShadowTextureConfigList
+        OGRE_DEPRECATED size_t getShadowTextureCount(void) const {return mShadowTextureConfigList.size(); }
 
         /** Set the number of shadow textures a light type uses.
         @remarks
@@ -2820,7 +2823,7 @@ namespace Ogre {
 
         /** Sets the proportional distance which a texture shadow which is generated from a
             directional light will be offset into the camera view to make best use of texture space.
-        @remarks
+
             When generating a shadow texture from a directional light, an approximation is used
             since it is not possible to render the entire scene to one texture. 
             The texture is projected onto an area centred on the camera, and is
@@ -3447,6 +3450,8 @@ namespace Ogre {
         void _handleLodEvents();
 
         IlluminationRenderStage _getCurrentRenderStage() {return mIlluminationStage;}
+
+        const AutoParamDataSource* _getAutoParamDataSource() { return mAutoParamDataSource.get(); }
     };
 
     /** Default implementation of IntersectionSceneQuery. */

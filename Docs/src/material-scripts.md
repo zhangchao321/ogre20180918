@@ -532,11 +532,11 @@ Default: alpha\_to\_coverage off <a name="light_005fscissor"></a>
 
 Sets whether when rendering this pass, rendering will be limited to a screen-space scissor rectangle representing the coverage of the light(s) being used in this pass.
 @par
-Format: light\_scissor &lt;on|off&gt; Default: light\_scissor off
+Format: light\_scissor &lt;on|off&gt; 
+@par
+Default: light\_scissor off
 
 @copydetails Ogre::Pass::setLightScissoringEnabled
-
-@see @ref Integrated-Texture-Shadows
 
 <a name="light_005fclip_005fplanes"></a><a name="light_005fclip_005fplanes-1"></a>
 
@@ -544,15 +544,15 @@ Format: light\_scissor &lt;on|off&gt; Default: light\_scissor off
 
 Sets whether when rendering this pass, triangle setup will be limited to clipping volume covered by the light.
 @par
-Format: light\_clip\_planes &lt;on|off&gt; Default: light\_clip\_planes off
+Format: light\_clip\_planes &lt;on|off&gt; 
+@par
+Default: light\_clip\_planes off
 
 @copydetails Ogre::Pass::setLightClipPlanesEnabled
 
 @see @ref Integrated-Texture-Shadows
 
-<a name="illumination_005fstage"></a><a name="illumination_005fstage-1"></a>
-
-## illumination\_stage
+## illumination_stage {#illumination_005fstage}
 
 @copydetails Ogre::Pass::setIlluminationStage
 
@@ -1039,9 +1039,12 @@ Sets the images used in a cubic texture, i.e. one made up of 6 individual images
 @par
 Format1 (short): cubic\_texture &lt;base\_name&gt; &lt;combinedUVW|separateUV&gt;
 
+@deprecated use the format '`texture <basename> cubic`' instead
+
 The base\_name in this format is something like ’skybox.jpg’, and the system will expect you to provide skybox\_fr.jpg, skybox\_bk.jpg, skybox\_up.jpg, skybox\_dn.jpg, skybox\_lf.jpg, and skybox\_rt.jpg for the individual faces.
+
 @par
-Format2 (long): cubic\_texture &lt;front&gt; &lt;back&gt; &lt;left&gt; &lt;right&gt; &lt;up&gt; &lt;down&gt; separateUV
+Format2 (long): cubic\_texture &lt;front&gt; &lt;back&gt; &lt;left&gt; &lt;right&gt; &lt;up&gt; &lt;down&gt; &lt;combinedUVW|separateUV&gt;
 
 In this case each face is specified explicitly, incase you don’t want to conform to the image naming standards above. You can only use this for the separateUV version since the combinedUVW version requires a single texture name to be assigned to the combined 3D texture (see below).
 
@@ -1050,20 +1053,16 @@ In both cases the final parameter means the following:
 <dl compact="compact">
 <dt>separateUV</dt> <dd>
 
-The 6 textures are kept separate but are all referenced by this single texture layer. One texture at a time is active (they are actually stored as 6 frames), and they are addressed using standard 2D UV coordinates.
+@deprecated Use real cubic textures due to hardware support
 
-@note This type is only useful with skyboxes where only one face is rendered at a time. For everything else real cubic textures are better due to hardware support.
+The 6 textures are kept separate but are all referenced by this single texture layer. One texture at a time is active (they are actually stored as 6 frames), and they are addressed using standard 2D UV coordinates.
 </dd>
 <dt>combinedUVW</dt> <dd>
 
 The 6 textures are combined into a single ’cubic’ texture map which is then addressed using 3D texture coordinates.
 
-@deprecated use the format `texture <basename> cubic` instead
-
 </dd>
 </dl> <br>
-@par
-Default: none
 
 <a name="binding_005ftype"></a><a name="binding_005ftype-1"></a>
 
@@ -1077,9 +1076,9 @@ Format: binding\_type &lt;vertex|fragment&gt;
 @par
 Default: binding\_type fragment
 
-<a name="content_005ftype"></a><a name="content_005ftype-1"></a>
+<a name="content_005ftype"></a>
 
-## content\_type
+## content_type
 
 Tells this texture unit where it should get its content from. The default is to get texture content from a named texture, as defined with the [texture](#texture), [cubic\_texture](#cubic_005ftexture), [anim\_texture](#anim_005ftexture) attributes. However you can also pull texture information from other automated sources.
 

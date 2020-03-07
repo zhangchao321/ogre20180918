@@ -145,9 +145,10 @@ namespace Ogre {
         // never process responses in main thread for longer than 10ms by default
         defaultQ->setResponseProcessingTimeLimit(10);
         // match threads to hardware
-        unsigned threadCount = OGRE_THREAD_HARDWARE_CONCURRENCY;
-        if (!threadCount)
-            threadCount = 1;
+        int threadCount = OGRE_THREAD_HARDWARE_CONCURRENCY;
+        // but clamp it at 2 by default - we dont scale much beyond that currently
+        // yet it helps on android where it needlessly burns CPU
+        threadCount = Math::Clamp(threadCount, 1, 2);
         defaultQ->setWorkerThreadCount(threadCount);
 
         // only allow workers to access rendersystem if threadsupport is 1
@@ -257,10 +258,7 @@ namespace Ogre {
         mParticleManager.reset(); // may use plugins
         unloadPlugins();
 
-        Pass::processPendingPassUpdates(); // make sure passes are cleaned
-
         mAutoWindow = 0;
-        mFirstTimePostWindowInit = false;
 
         StringInterface::cleanupDictionary();
 
@@ -498,7 +496,8 @@ namespace Ogre {
 
         mActiveRenderer = system;
         // Tell scene managers
-        SceneManagerEnumerator::getSingleton().setRenderSystem(system);
+        if(mSceneManagerEnum)
+            mSceneManagerEnum->setRenderSystem(system);
 
         if(RenderSystem::Listener* ls = RenderSystem::getSharedListener())
             ls->eventOccurred("RenderSystemChanged");
@@ -913,7 +912,11 @@ namespace Ogre {
         if(mSceneManagerEnum)
             mSceneManagerEnum->shutdownAll();
         if(mFirstTimePostWindowInit)
+        {
             shutdownPlugins();
+            mParticleManager->removeAllTemplates(true);
+            mFirstTimePostWindowInit = false;
+        }
         mSceneManagerEnum.reset();
         mShadowTextureManager.reset();
 
@@ -1050,7 +1053,7 @@ namespace Ogre {
             {
                 OGRE_DELETE_T(fs, basic_fstream, MEMCATEGORY_GENERAL);
                 OGRE_EXCEPT(Exception::ERR_CANNOT_WRITE_TO_FILE,
-                "Can't open " + filename + " for writing", __FUNCTION__);
+                            "Can't open " + filename + " for writing");
             }
 
             stream = DataStreamPtr(OGRE_NEW FileStreamDataStream(filename, fs));
@@ -1062,13 +1065,9 @@ namespace Ogre {
     //---------------------------------------------------------------------
     DataStreamPtr Root::openFileStream(const String& filename, const String& groupName)
     {
-        try
-        {
-            return ResourceGroupManager::getSingleton().openResource(filename, groupName);
-        }
-        catch (FileNotFoundException&)
-        {
-        }
+        auto ret = ResourceGroupManager::getSingleton().openResource(filename, groupName, NULL, false);
+        if(ret)
+            return ret;
 
         // try direct
         std::ifstream *ifs = OGRE_NEW_T(std::ifstream, MEMCATEGORY_GENERAL);
@@ -1076,8 +1075,7 @@ namespace Ogre {
         if(!*ifs)
         {
             OGRE_DELETE_T(ifs, basic_ifstream, MEMCATEGORY_GENERAL);
-            OGRE_EXCEPT(
-                Exception::ERR_FILE_NOT_FOUND, "'" + filename + "' file not found!", __FUNCTION__);
+            OGRE_EXCEPT(Exception::ERR_FILE_NOT_FOUND, "'" + filename + "' file not found!");
         }
         return DataStreamPtr(OGRE_NEW FileStreamDataStream(filename, ifs));
     }

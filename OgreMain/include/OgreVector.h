@@ -43,7 +43,7 @@ namespace Ogre
     *  @{
     */
     /// helper class to implement legacy API. Notably x, y, z access
-    template <int dims, typename T> struct _OgreExport VectorBase
+    template <int dims, typename T> struct VectorBase
     {
         VectorBase() {}
         VectorBase(T _x, T _y)
@@ -321,7 +321,7 @@ namespace Ogre
         template<typename U>
         explicit Vector(const U* _ptr) {
             for (int i = 0; i < dims; i++)
-                ptr()[i] = _ptr[i];
+                ptr()[i] = T(_ptr[i]);
         }
 
         template<typename U>
@@ -373,7 +373,7 @@ namespace Ogre
         @param tolerance The amount that each element of the vector may vary by
             and still be considered equal
         */
-        bool positionEquals(const Vector& rhs, Real tolerance = 1e-03) const
+        bool positionEquals(const Vector& rhs, Real tolerance = 1e-03f) const
         {
             for (int i = 0; i < dims; i++)
                 if (!Math::RealEqual(ptr()[i], rhs[i], tolerance))
@@ -825,6 +825,10 @@ namespace Ogre
         // the final version"
         Real a = Math::Sqrt(((const Vector3*)this)->squaredLength() * dest.squaredLength());
         Real b = a + dest.dotProduct(*this);
+
+        if (Math::RealEqual(b, 2 * a) || a == 0)
+            return Quaternion::IDENTITY;
+
         Vector3 axis;
 
         if (b < (Real)1e-06 * a)
@@ -873,6 +877,34 @@ namespace Ogre
                 return y > 0 ? UNIT_Y : NEGATIVE_UNIT_Y;
             else
                 return z > 0 ? UNIT_Z : NEGATIVE_UNIT_Z;
+    }
+
+    // Math functions
+    inline Vector3 Math::calculateBasicFaceNormal(const Vector3& v1, const Vector3& v2, const Vector3& v3)
+    {
+        Vector3 normal = (v2 - v1).crossProduct(v3 - v1);
+        normal.normalise();
+        return normal;
+    }
+    inline Vector4 Math::calculateFaceNormal(const Vector3& v1, const Vector3& v2, const Vector3& v3)
+    {
+        Vector3 normal = calculateBasicFaceNormal(v1, v2, v3);
+        // Now set up the w (distance of tri from origin
+        return Vector4(normal.x, normal.y, normal.z, -(normal.dotProduct(v1)));
+    }
+    inline Vector3 Math::calculateBasicFaceNormalWithoutNormalize(
+        const Vector3& v1, const Vector3& v2, const Vector3& v3)
+    {
+        return (v2 - v1).crossProduct(v3 - v1);
+    }
+
+    inline Vector4 Math::calculateFaceNormalWithoutNormalize(const Vector3& v1,
+                                                             const Vector3& v2,
+                                                             const Vector3& v3)
+    {
+        Vector3 normal = calculateBasicFaceNormalWithoutNormalize(v1, v2, v3);
+        // Now set up the w (distance of tri from origin)
+        return Vector4(normal.x, normal.y, normal.z, -(normal.dotProduct(v1)));
     }
     /** @} */
     /** @} */

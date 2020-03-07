@@ -16,6 +16,9 @@
 namespace OgreBites
 {
 
+// maximal rate to update widgets internally
+static unsigned FRAME_UPDATE_DELAY = 250; // ms
+
 Widget::Widget()
 {
     mTrayLoc = TL_NONE;
@@ -923,6 +926,10 @@ void Slider::_cursorMoved(const Ogre::Vector2 &cursorPos, float wheelDelta)
 
         mHandle->setLeft(Ogre::Math::Clamp<int>((int)newLeft, 0, (int)rightBoundary));
         setValue(getSnappedValue(newLeft / rightBoundary));
+
+        // sync mHandle's mPixelLeft with mLeft
+        // if multiple "mouseMoved" happened during one frame, mLeft could be incorrect otherwise
+        mHandle->_update();
     }
 }
 
@@ -1131,7 +1138,7 @@ TrayManager::TrayManager(const Ogre::String &name, Ogre::RenderWindow *window, T
     mGroupInitProportion(0.0f), mGroupLoadProportion(0.0f), mLoadInc(0.0f)
 {
     mTimer = Ogre::Root::getSingleton().getTimer();
-    mLastStatUpdateTime = 0;
+    mLastStatUpdateTime = -FRAME_UPDATE_DELAY; // update immediately on first call
 
     Ogre::OverlayManager& om = Ogre::OverlayManager::getSingleton();
 
@@ -1931,7 +1938,7 @@ void TrayManager::frameRendered(const Ogre::FrameEvent &evt)
 
 
     unsigned long currentTime = mTimer->getMilliseconds();
-    if (areFrameStatsVisible() && currentTime - mLastStatUpdateTime > 250)
+    if (areFrameStatsVisible() && currentTime - mLastStatUpdateTime >= FRAME_UPDATE_DELAY)
     {
         Ogre::RenderTarget::FrameStats stats = mWindow->getStatistics();
 
@@ -1976,7 +1983,12 @@ void TrayManager::frameRendered(const Ogre::FrameEvent &evt)
 void TrayManager::windowUpdate()
 {
 #if OGRE_PLATFORM != OGRE_PLATFORM_APPLE_IOS
-    mWindow->update();
+    unsigned long currentTime = mTimer->getMilliseconds();
+    if (currentTime - mLastStatUpdateTime >= FRAME_UPDATE_DELAY)
+    {
+        mLastStatUpdateTime = currentTime;
+        mWindow->update();
+    }
 #endif
 }
 

@@ -29,13 +29,6 @@ using namespace OgreBites;
 
 #define CONTROLS_PER_PAGE 5
 
-enum OceanMaterial {
-    OCEAN1_CG,
-    OCEAN1_NATIVE,
-    OCEAN2_CG,
-    OCEAN2_NATIVE
-};
-
 class _OgreSampleClassExport Sample_Ocean : public SdkSample
 {
 public:
@@ -70,13 +63,12 @@ protected:
     
     void setupGUI();
     void setupScene();
-    void setupContent() override;
-    void cleanupContent() override;
+    virtual void setupContent();
+    virtual void cleanupContent();
     
     void sliderMoved(Slider* slider);
     void buttonHit(OgreBites::Button* button);
     void checkBoxToggled(CheckBox* box);
-    void selectOceanMaterial(OceanMaterial newMaterial);
     void itemSelected(SelectMenu* menu);
     void changePage(int nextPage = -1);
     virtual bool frameRenderingQueued(const FrameEvent& evt);
@@ -475,7 +467,6 @@ bool Sample_Ocean::frameRenderingQueued(const FrameEvent& evt)
     }
     return SdkSample::frameRenderingQueued(evt);
 }
-
 void Sample_Ocean::buttonHit(OgreBites::Button* button)
 {
     //Only one button - change page

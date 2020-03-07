@@ -120,7 +120,7 @@ namespace Ogre {
         GL_STENCIL_INDEX4_OES,
         GL_STENCIL_INDEX8
     };
-    static const size_t stencilBits[] =
+    static const uchar stencilBits[] =
     {
         0,
         1,
@@ -138,7 +138,7 @@ namespace Ogre {
         , GL_DEPTH24_STENCIL8_OES    // Packed depth / stencil
         , GL_DEPTH32F_STENCIL8
     };
-    static const size_t depthBits[] =
+    static const uchar depthBits[] =
     {
         0
         ,16
@@ -323,7 +323,7 @@ namespace Ogre {
         bool hasGLES3 = rs->hasMinGLVersion(3, 0);
 
         const size_t depthCount = hasGLES3 ? DEPTHFORMAT_COUNT : DEPTHFORMAT_COUNT - 1; // 32_8 is not available on GLES2
-        const size_t stencilStep = hasGLES3 ? 3 : 1; // 1 and 4 bit not available on GLES3
+        const uchar stencilStep = hasGLES3 ? 3 : 1; // 1 and 4 bit not available on GLES3
 
         for(size_t x = 0; x < PF_COUNT; ++x)
         {
@@ -361,13 +361,13 @@ namespace Ogre {
                     << " depth/stencil support: ";
 
                 // For each depth/stencil formats
-                for (size_t depth = 0; depth < depthCount; ++depth)
+                for (uchar depth = 0; depth < depthCount; ++depth)
                 {
                     if (depthFormats[depth] != GL_DEPTH24_STENCIL8 && depthFormats[depth] != GL_DEPTH32F_STENCIL8)
                     {
                         // General depth/stencil combination
 
-                        for (size_t stencil = 0; stencil < STENCILFORMAT_COUNT; stencil += stencilStep)
+                        for (uchar stencil = 0; stencil < STENCILFORMAT_COUNT; stencil += stencilStep)
                         {
 //                            StringStream l;
 //                            l << "Trying " << PixelUtil::getFormatName((PixelFormat)x) 
@@ -378,7 +378,7 @@ namespace Ogre {
                             if (_tryFormat(depthFormats[depth], stencilFormats[stencil]))
                             {
                                 // Add mode to allowed modes
-                                str << "D" << depthBits[depth] << "S" << stencilBits[stencil] << " ";
+                                str << StringUtil::format("D%dS%d ", depthBits[depth], stencilBits[stencil]);
                                 FormatProperties::Mode mode;
                                 mode.depth = depth;
                                 mode.stencil = stencil;
@@ -401,7 +401,7 @@ namespace Ogre {
                         if (_tryPackedFormat(depthFormats[depth]))
                         {
                             // Add mode to allowed modes
-                            str << "Packed-D" << depthBits[depth] << "S" << 8 << " ";
+                            str << "Packed-D" << int(depthBits[depth]) << "S8 ";
                             FormatProperties::Mode mode;
                             mode.depth = depth;
                             mode.stencil = 0;   // unuse
@@ -504,9 +504,7 @@ namespace Ogre {
     void GLES2FBOManager::bind(RenderTarget *target)
     {
         // Check if the render target is in the rendertarget->FBO map
-        GLES2FrameBufferObject *fbo = 0;
-        target->getCustomAttribute("FBO", &fbo);
-        if(fbo)
+        if(auto fbo = dynamic_cast<GLRenderTarget*>(target)->getFBO())
             fbo->bind(true);
             // Old style context (window/pbuffer) or copying render texture
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS

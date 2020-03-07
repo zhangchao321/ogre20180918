@@ -80,7 +80,6 @@
 #endif
 #include "VolumeTex.h"
 #include "Water.h"
-#include "Cube.h"
 
 using namespace Ogre;
 using namespace OgreBites;
@@ -146,7 +145,6 @@ DefaultSamplesPlugin::DefaultSamplesPlugin() : SamplePlugin("DefaultSamplesPlugi
 #ifdef OGRE_BUILD_COMPONENT_HLMS
     addSample(new Sample_HLMS);
 #endif
-	addSample(new CubeSample);
 }
 
 DefaultSamplesPlugin::~DefaultSamplesPlugin()

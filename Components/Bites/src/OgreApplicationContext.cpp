@@ -95,16 +95,12 @@ void ApplicationContext::initApp()
 
 void ApplicationContext::closeApp()
 {
-#if OGRE_PLATFORM != OGRE_PLATFORM_ANDROID
-    if (mRoot)
-    {
-        mRoot->saveConfig();
-    }
-#endif
-
     shutdown();
     if (mRoot)
     {
+#if OGRE_PLATFORM != OGRE_PLATFORM_ANDROID
+        mRoot->saveConfig();
+#endif
         OGRE_DELETE mRoot;
         mRoot = NULL;
     }
@@ -334,6 +330,7 @@ NativeWindowPair ApplicationContext::createWindow(const Ogre::String& name, Ogre
     miscParams["preserveContext"] = "true"; //Optionally preserve the gl context, prevents reloading all resources, this is false by default
 
     mWindows[0].render = Ogre::Root::getSingleton().createRenderWindow(name, 0, 0, false, &miscParams);
+    ret = mWindows[0];
 #else
     Ogre::ConfigOptionMap ropts = mRoot->getRenderSystem()->getConfigOptions();
 
@@ -711,7 +708,8 @@ void ApplicationContext::reconfigure(const Ogre::String &renderer, Ogre::NameVal
 
 void ApplicationContext::shutdown()
 {
-    if (Ogre::GpuProgramManager::getSingleton().getSaveMicrocodesToCache())
+    const auto& gpuMgr = Ogre::GpuProgramManager::getSingleton();
+    if (gpuMgr.getSaveMicrocodesToCache() && gpuMgr.isCacheDirty())
     {
         Ogre::String path = mFSLayer->getWritablePath(SHADER_CACHE_FILENAME);
         std::fstream outFile(path.c_str(), std::ios::out | std::ios::binary);
@@ -720,7 +718,7 @@ void ApplicationContext::shutdown()
         {
             Ogre::LogManager::getSingleton().logMessage("Writing shader cache to "+path);
             Ogre::DataStreamPtr ostream(new Ogre::FileStreamDataStream(path, &outFile, false));
-            Ogre::GpuProgramManager::getSingleton().saveMicrocodeCache(ostream);
+            gpuMgr.saveMicrocodeCache(ostream);
         }
         else
             Ogre::LogManager::getSingleton().logWarning("Cannot open shader cache for writing "+path);
@@ -791,7 +789,6 @@ void ApplicationContext::pollEvents()
                     continue;
 
                 Ogre::RenderWindow* win = it->render;
-                win->resize(event.window.data1, event.window.data2);
                 win->windowMovedOrResized();
                 windowResized(win);
             }
@@ -801,6 +798,15 @@ void ApplicationContext::pollEvents()
             break;
         }
     }
+
+#   if OGRE_PLATFORM == OGRE_PLATFORM_APPLE
+    // hacky workaround for black window on OSX
+    for(const auto& win : mWindows)
+    {
+        SDL_SetWindowSize(win.native, win.render->getWidth(), win.render->getHeight());
+        win.render->windowMovedOrResized();
+    }
+#   endif
 #elif OGRE_PLATFORM == OGRE_PLATFORM_ANDROID
     for(WindowList::iterator it = mWindows.begin(); it != mWindows.end(); ++it)
     {

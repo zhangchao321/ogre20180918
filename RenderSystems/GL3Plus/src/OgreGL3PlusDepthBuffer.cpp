@@ -93,18 +93,16 @@ namespace Ogre
         {
             if( this->getWidth() != renderTarget->getWidth() ||
                 this->getHeight() != renderTarget->getHeight() ||
-                this->getFsaa() != renderTarget->getFSAA() )
+                this->getFSAA() != renderTarget->getFSAA() )
                 return false;
         }
 
         //Now check this is the appropriate format
-        GL3PlusFrameBufferObject *fbo = 0;
-        renderTarget->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbo);
+        auto *fbo = dynamic_cast<GLRenderTarget*>(renderTarget)->getFBO();
 
         if( !fbo )
         {
-            GL3PlusContext *windowContext = 0;
-            renderTarget->getCustomAttribute( GLRenderTexture::CustomAttributeString_GLCONTEXT, &windowContext );
+            GL3PlusContext *windowContext = dynamic_cast<GLRenderTarget*>(renderTarget)->getContext();
 
             //Non-FBO targets and FBO depth surfaces don't play along, only dummies which match the same
             //context

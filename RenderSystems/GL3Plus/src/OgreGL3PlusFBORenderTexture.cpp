@@ -59,7 +59,7 @@ namespace Ogre {
         }
         else if(name == GLRenderTexture::CustomAttributeString_GLCONTEXT)
         {
-            *static_cast<GLContext**>(pData) = mFB.getContext();
+            *static_cast<GLContext**>(pData) = getContext();
         }
         else if (name == "GL_FBOID")
         {
@@ -109,7 +109,7 @@ namespace Ogre {
             GL_STENCIL_INDEX8,
             GL_STENCIL_INDEX16
         };
-    static const size_t stencilBits[] =
+    static const uchar stencilBits[] =
         {
             0, 1, 4, 8, 16
         };
@@ -125,7 +125,7 @@ namespace Ogre {
             GL_DEPTH24_STENCIL8,    // Packed depth / stencil
             GL_DEPTH32F_STENCIL8
         };
-    static const size_t depthBits[] =
+    static const uchar depthBits[] =
         {
             0,16,24,32,32,24,32
         };
@@ -335,7 +335,7 @@ namespace Ogre {
                     << " depth/stencil support: ";
 
                 // For each depth/stencil formats
-                for (size_t depth = 0; depth < DEPTHFORMAT_COUNT; ++depth)
+                for (uchar depth = 0; depth < DEPTHFORMAT_COUNT; ++depth)
                 {
                     if ((depthFormats[depth] != GL_DEPTH24_STENCIL8) && (depthFormats[depth] != GL_DEPTH32F_STENCIL8))
                     {
@@ -351,7 +351,7 @@ namespace Ogre {
                             }
                         }
 
-                        for (size_t stencil = 0; stencil < STENCILFORMAT_COUNT; ++stencil)
+                        for (uchar stencil = 0; stencil < STENCILFORMAT_COUNT; ++stencil)
                         {
                             //                            StringStream l;
                             //                            l << "Trying " << PixelUtil::getFormatName((PixelFormat)x)
@@ -372,7 +372,7 @@ namespace Ogre {
                             if (formatSupported)
                             {
                                 // Add mode to allowed modes
-                                str << "D" << depthBits[depth] << "S" << stencilBits[stencil] << " ";
+                                str << StringUtil::format("D%dS%d ", depthBits[depth], stencilBits[stencil]);
                                 FormatProperties::Mode mode = {depth, stencil};
                                 mProps[x].modes.push_back(mode);
                             }
@@ -393,7 +393,7 @@ namespace Ogre {
                         if (formatSupported)
                         {
                             // Add mode to allowed modes
-                            str << "Packed-D" << depthBits[depth] << "S" << 8 << " ";
+                            str << "Packed-D" << int(depthBits[depth]) << "S8 ";
                             FormatProperties::Mode mode = {depth, 0}; // stencil unused
                             mProps[x].modes.push_back(mode);
                         }
@@ -476,9 +476,7 @@ namespace Ogre {
     void GL3PlusFBOManager::bind(RenderTarget *target)
     {
         // Check if the render target is in the rendertarget->FBO map
-        GL3PlusFrameBufferObject *fbo = 0;
-        target->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbo);
-        if(fbo)
+        if(auto fbo = dynamic_cast<GLRenderTarget*>(target)->getFBO())
             fbo->bind(true);
         else
             // Old style context (window/pbuffer) or copying render texture

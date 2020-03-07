@@ -303,7 +303,7 @@ namespace Ogre {
         */
         OGRE_DEPRECATED void yaw(const Radian& angle);
 
-        /** Pitches the camera up/down anticlockwise around it's local x axis.
+        /** Pitches the camera up/down anticlockwise around it's local z axis.
         @deprecated attach to SceneNode and use SceneNode::pitch
         */
         OGRE_DEPRECATED void pitch(const Radian& angle);

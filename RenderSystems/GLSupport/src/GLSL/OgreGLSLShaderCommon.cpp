@@ -120,15 +120,16 @@ namespace Ogre {
             }
         }
 
+		// deal with includes
+		mSource = _resolveIncludes(mSource, this, mFilename);
+
         size_t out_size = 0;
         const char *src = mSource.c_str ();
         size_t src_len = mSource.size ();
         char *out = cpp.Parse (src, src_len, out_size);
         if (!out || !out_size)
             // Failed to preprocess, break out
-            OGRE_EXCEPT (Exception::ERR_RENDERINGAPI_ERROR,
-            "Failed to preprocess shader " + mName,
-            __FUNCTION__);
+            OGRE_EXCEPT(Exception::ERR_RENDERINGAPI_ERROR, "Failed to preprocess shader " + mName);
 
         mSource = String (out, out_size);
         if (out < src || out > src + src_len)

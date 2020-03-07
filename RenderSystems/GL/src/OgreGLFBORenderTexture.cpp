@@ -107,7 +107,7 @@ static const GLenum stencilFormats[] =
     GL_STENCIL_INDEX8_EXT,
     GL_STENCIL_INDEX16_EXT
 };
-static const size_t stencilBits[] =
+static const uchar stencilBits[] =
 {
     0, 1, 4, 8, 16
 };
@@ -121,7 +121,7 @@ static const GLenum depthFormats[] =
     GL_DEPTH_COMPONENT32,
     GL_DEPTH24_STENCIL8_EXT // packed depth / stencil
 };
-static const size_t depthBits[] =
+static const uchar depthBits[] =
 {
     0,16,24,32,24
 };
@@ -334,13 +334,13 @@ static const size_t depthBits[] =
                     << " depth/stencil support: ";
 
                 // For each depth/stencil formats
-                for (size_t depth = 0; depth < DEPTHFORMAT_COUNT; ++depth)
+                for (uchar depth = 0; depth < DEPTHFORMAT_COUNT; ++depth)
                 {
                     if (depthFormats[depth] != GL_DEPTH24_STENCIL8_EXT)
                     {
                         // General depth/stencil combination
 
-                        for (size_t stencil = 0; stencil < STENCILFORMAT_COUNT; ++stencil)
+                        for (uchar stencil = 0; stencil < STENCILFORMAT_COUNT; ++stencil)
                         {
                             //StringStream l;
                             //l << "Trying " << PixelUtil::getFormatName((PixelFormat)x) 
@@ -351,7 +351,7 @@ static const size_t depthBits[] =
                             if (_tryFormat(depthFormats[depth], stencilFormats[stencil]))
                             {
                                 /// Add mode to allowed modes
-                                str << "D" << depthBits[depth] << "S" << stencilBits[stencil] << " ";
+                                str << StringUtil::format("D%dS%d ", depthBits[depth], stencilBits[stencil]);
                                 FormatProperties::Mode mode;
                                 mode.depth = depth;
                                 mode.stencil = stencil;
@@ -378,7 +378,7 @@ static const size_t depthBits[] =
                         if (_tryPackedFormat(depthFormats[depth]))
                         {
                             /// Add mode to allowed modes
-                            str << "Packed-D" << depthBits[depth] << "S" << 8 << " ";
+                            str << "Packed-D" << int(depthBits[depth]) << "S8";
                             FormatProperties::Mode mode;
                             mode.depth = depth;
                             mode.stencil = 0;   // unuse
@@ -491,10 +491,8 @@ static const size_t depthBits[] =
     void GLFBOManager::bind(RenderTarget *target)
     {
         /// Check if the render target is in the rendertarget->FBO map
-        GLFrameBufferObject *fbo = 0;
-        target->getCustomAttribute(GLRenderTexture::CustomAttributeString_FBO, &fbo);
-        if(fbo)
-            fbo->bind();
+        if(auto fbo = dynamic_cast<GLRenderTarget*>(target)->getFBO())
+            fbo->bind(true);
         else
             // Old style context (window/pbuffer) or copying render texture
             glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
